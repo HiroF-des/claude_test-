@@ -1,0 +1,906 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>UX Research Simulator</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --color-primary: #1a1a1a;
+      --color-surface: #f8f7f4;
+      --color-card: #ffffff;
+      --color-border: rgba(0,0,0,0.1);
+      --color-accent-pain: #D85A30;
+      --color-accent-need: #378ADD;
+      --color-accent-quote: #639922;
+      --color-accent-hmw: #BA7517;
+      --color-text-muted: rgba(0,0,0,0.45);
+      --transition: 0.2s ease;
+    }
+
+    body {
+      font-family: 'Noto Sans JP', 'Hiragino Sans', sans-serif;
+      font-weight: 400;
+      background: var(--color-surface);
+      color: var(--color-primary);
+      min-height: 100vh;
+      line-height: 1.6;
+    }
+
+    /* HEADER */
+    .app-header {
+      background: var(--color-card);
+      border-bottom: 0.5px solid var(--color-border);
+      padding: 0 24px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    .header-inner {
+      max-width: 960px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      height: 56px;
+      gap: 10px;
+    }
+    .app-logo-icon {
+      width: 26px;
+      height: 26px;
+      background: var(--color-primary);
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      font-size: 13px;
+      font-weight: 700;
+      flex-shrink: 0;
+    }
+    .app-logo-text {
+      font-size: 14px;
+      font-weight: 500;
+    }
+    .header-badge {
+      margin-left: auto;
+      font-size: 11px;
+      color: var(--color-text-muted);
+      background: rgba(0,0,0,0.05);
+      border-radius: 20px;
+      padding: 3px 10px;
+    }
+
+    /* MAIN */
+    .main-content { max-width: 960px; margin: 0 auto; padding: 32px 24px 80px; }
+
+    /* STEP NAV */
+    .step-nav { display: flex; align-items: center; margin-bottom: 32px; }
+    .step-item { display: flex; align-items: center; gap: 8px; cursor: default; }
+    .step-circle {
+      width: 28px; height: 28px; border-radius: 50%;
+      border: 1.5px solid var(--color-border);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 12px; font-weight: 500;
+      color: var(--color-text-muted);
+      transition: var(--transition);
+      background: var(--color-card);
+    }
+    .step-item.active .step-circle { background: var(--color-primary); border-color: var(--color-primary); color: #fff; }
+    .step-item.done .step-circle  { background: var(--color-primary); border-color: var(--color-primary); color: #fff; }
+    .step-label { font-size: 13px; color: var(--color-text-muted); transition: var(--transition); }
+    .step-item.active .step-label { color: var(--color-primary); font-weight: 500; }
+    .step-item.done .step-label   { color: var(--color-primary); }
+    .step-connector { width: 32px; height: 1px; background: var(--color-border); margin: 0 4px; }
+
+    /* CARD */
+    .card { background: var(--color-card); border: 0.5px solid var(--color-border); border-radius: 12px; padding: 20px; }
+    .card-title { font-size: 16px; font-weight: 500; margin-bottom: 4px; }
+    .card-subtitle { font-size: 13px; color: var(--color-text-muted); margin-bottom: 20px; }
+
+    /* FORM */
+    .form-section { display: flex; flex-direction: column; gap: 20px; }
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .form-field { display: flex; flex-direction: column; gap: 6px; }
+    .form-label { font-size: 13px; font-weight: 500; }
+    .form-input {
+      font-family: inherit; font-size: 14px;
+      border: 0.5px solid rgba(0,0,0,0.15); border-radius: 8px;
+      padding: 8px 12px; color: var(--color-primary); background: #fff;
+      transition: var(--transition);
+    }
+    .form-input:focus { outline: none; border-color: var(--color-primary); }
+    select.form-input {
+      appearance: none; cursor: pointer;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23999' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+      background-repeat: no-repeat; background-position: right 12px center; padding-right: 32px;
+    }
+    textarea.form-input { resize: vertical; min-height: 80px; }
+
+    /* TAGS */
+    .tag-group { display: flex; flex-wrap: wrap; gap: 8px; }
+    .tag {
+      font-family: inherit; font-size: 13px;
+      border: 0.5px solid rgba(0,0,0,0.15); border-radius: 20px;
+      padding: 5px 14px; cursor: pointer; background: transparent;
+      color: var(--color-primary); transition: var(--transition); user-select: none;
+    }
+    .tag:hover { border-color: rgba(0,0,0,0.3); background: rgba(0,0,0,0.03); }
+    .tag.selected { background: var(--color-primary); color: #fff; border-color: var(--color-primary); }
+
+    /* BUTTONS */
+    .btn {
+      font-family: inherit; font-size: 14px; font-weight: 500;
+      border: none; border-radius: 8px; padding: 10px 20px;
+      cursor: pointer; transition: var(--transition);
+      display: inline-flex; align-items: center; gap: 8px;
+    }
+    .btn-primary { background: var(--color-primary); color: #fff; }
+    .btn-primary:hover { background: #333; }
+    .btn-secondary { background: transparent; color: var(--color-primary); border: 0.5px solid rgba(0,0,0,0.2); }
+    .btn-secondary:hover { background: rgba(0,0,0,0.04); }
+    .btn-sm { font-size: 12px; padding: 6px 12px; }
+    .form-actions { display: flex; justify-content: flex-end; padding-top: 8px; }
+
+    /* PROGRESS */
+    .progress-wrap { margin: 24px 0; }
+    .progress-label { font-size: 13px; color: var(--color-text-muted); margin-bottom: 8px; }
+    .progress-status { font-size: 12px; color: var(--color-text-muted); margin-top: 6px; font-style: italic; }
+    .progress-track { height: 4px; background: rgba(0,0,0,0.08); border-radius: 4px; overflow: hidden; }
+    .progress-bar {
+      height: 100%; background: var(--color-primary);
+      border-radius: 4px; width: 0%; transition: width 0.5s ease;
+    }
+
+    /* STEP PANELS */
+    .step-panel { display: none; }
+    .step-panel.active { display: block; }
+
+    /* SECTION HEADER */
+    .section-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+    .section-title { font-size: 20px; font-weight: 500; }
+
+    /* INTERVIEW CARDS */
+    .interviews-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; margin-top: 24px; }
+    .interview-card {
+      background: var(--color-card); border: 0.5px solid var(--color-border);
+      border-radius: 12px; padding: 20px;
+      opacity: 0; transform: translateY(12px);
+      transition: opacity 0.4s ease, transform 0.4s ease;
+    }
+    .interview-card.visible { opacity: 1; transform: translateY(0); }
+    .interview-header { display: flex; align-items: flex-start; gap: 12px; margin-bottom: 16px; }
+    .avatar {
+      width: 40px; height: 40px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 16px; font-weight: 500; color: #fff; flex-shrink: 0;
+    }
+    .interview-meta { flex: 1; min-width: 0; }
+    .interview-name { font-size: 15px; font-weight: 500; margin-bottom: 2px; }
+    .interview-profile { font-size: 12px; color: var(--color-text-muted); line-height: 1.5; }
+    .qa-list { display: flex; flex-direction: column; gap: 12px; }
+    .qa-q { font-size: 12px; font-weight: 500; color: var(--color-text-muted); margin-bottom: 4px; display: flex; gap: 6px; }
+    .qa-q::before { content: 'Q.'; font-weight: 700; color: var(--color-primary); flex-shrink: 0; }
+    .qa-a { font-size: 13px; line-height: 1.65; padding-left: 22px; }
+
+    /* METRICS */
+    .metrics-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 24px; }
+    .metric-card {
+      background: var(--color-card); border: 0.5px solid var(--color-border);
+      border-radius: 12px; padding: 16px 20px; text-align: center;
+    }
+    .metric-value { font-size: 28px; font-weight: 500; line-height: 1.2; }
+    .metric-label { font-size: 12px; color: var(--color-text-muted); margin-top: 4px; }
+
+    /* INSIGHTS */
+    .insights-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .insight-card {
+      background: var(--color-card); border: 0.5px solid var(--color-border);
+      border-radius: 12px; padding: 20px;
+      opacity: 0; transform: translateY(12px);
+      transition: opacity 0.4s ease, transform 0.4s ease;
+    }
+    .insight-card.visible { opacity: 1; transform: translateY(0); }
+    .insight-tag {
+      display: inline-flex; align-items: center; gap: 6px;
+      font-size: 11px; font-weight: 500; letter-spacing: 0.04em; text-transform: uppercase;
+      padding: 4px 10px; border-radius: 20px; margin-bottom: 14px;
+    }
+    .insight-tag.pain  { background: rgba(216,90,48,0.1);  color: var(--color-accent-pain); }
+    .insight-tag.need  { background: rgba(55,138,221,0.1); color: var(--color-accent-need); }
+    .insight-tag.quote { background: rgba(99,153,34,0.1);  color: var(--color-accent-quote); }
+    .insight-tag.hmw   { background: rgba(186,117,23,0.1); color: var(--color-accent-hmw); }
+    .insight-title { font-size: 15px; font-weight: 500; margin-bottom: 12px; }
+    .insight-list { list-style: none; display: flex; flex-direction: column; gap: 8px; }
+    .insight-item { font-size: 13px; line-height: 1.65; display: flex; gap: 8px; align-items: flex-start; }
+    .insight-item::before {
+      content: ''; display: block; width: 6px; height: 6px;
+      border-radius: 50%; margin-top: 7px; flex-shrink: 0;
+    }
+    .pain-card  .insight-item::before { background: var(--color-accent-pain); }
+    .need-card  .insight-item::before { background: var(--color-accent-need); }
+    .quote-card .insight-item::before { background: var(--color-accent-quote); }
+    .hmw-card   .insight-item::before { background: var(--color-accent-hmw); }
+    .quote-item { font-style: italic; }
+    .quote-item::before { content: '"' !important; background: none !important; color: var(--color-accent-quote); font-size: 20px; font-style: normal; width: auto !important; height: auto !important; border-radius: 0 !important; margin-top: 0 !important; line-height: 1; }
+
+    /* ANALYZE AREA */
+    .analyze-area { margin-top: 24px; display: flex; justify-content: flex-end; }
+
+    /* COPY */
+    .copy-success { font-size: 12px; color: var(--color-accent-quote); opacity: 0; transition: opacity 0.3s ease; }
+    .copy-success.visible { opacity: 1; }
+
+    /* ERROR */
+    .error-box {
+      background: rgba(216,90,48,0.08); border: 0.5px solid rgba(216,90,48,0.3);
+      border-radius: 8px; padding: 12px 16px; font-size: 13px;
+      color: var(--color-accent-pain); margin-top: 12px; display: none;
+    }
+    .error-box.visible { display: block; }
+
+    /* RESPONSIVE */
+    @media (max-width: 640px) {
+      .form-row { grid-template-columns: 1fr; }
+      .insights-grid { grid-template-columns: 1fr; }
+      .metrics-row { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<header class="app-header">
+  <div class="header-inner">
+    <div class="app-logo-icon">U</div>
+    <span class="app-logo-text">UX Research Simulator</span>
+    <span class="header-badge">Mock Mode</span>
+  </div>
+</header>
+
+<main class="main-content">
+
+  <!-- STEP NAV -->
+  <nav class="step-nav" id="stepNav">
+    <div class="step-item active" id="stepItem1">
+      <div class="step-circle" id="stepCircle1">1</div>
+      <span class="step-label">ターゲット設定</span>
+    </div>
+    <div class="step-connector"></div>
+    <div class="step-item" id="stepItem2">
+      <div class="step-circle" id="stepCircle2">2</div>
+      <span class="step-label">インタビュー生成</span>
+    </div>
+    <div class="step-connector"></div>
+    <div class="step-item" id="stepItem3">
+      <div class="step-circle" id="stepCircle3">3</div>
+      <span class="step-label">インサイト抽出</span>
+    </div>
+  </nav>
+
+  <!-- STEP 1 -->
+  <section class="step-panel active" id="panel1">
+    <div class="card">
+      <div class="card-title">ターゲット設定</div>
+      <div class="card-subtitle">インタビュー対象者のプロフィールとリサーチ条件を設定してください。</div>
+      <div class="form-section">
+
+        <div class="form-field">
+          <label class="form-label" for="themeInput">リサーチテーマ</label>
+          <input type="text" class="form-input" id="themeInput"
+            placeholder="例：ふるさと納税の利用体験について"
+            value="ふるさと納税の利用体験について">
+        </div>
+
+        <div class="form-row">
+          <div class="form-field">
+            <label class="form-label" for="ageSelect">年代</label>
+            <select class="form-input" id="ageSelect">
+              <option value="20代">20代</option>
+              <option value="30代" selected>30代</option>
+              <option value="40代">40代</option>
+              <option value="50代">50代</option>
+            </select>
+          </div>
+          <div class="form-field">
+            <label class="form-label" for="lifestyleSelect">ライフスタイル</label>
+            <select class="form-input" id="lifestyleSelect">
+              <option value="単身">単身</option>
+              <option value="共働き夫婦" selected>共働き夫婦</option>
+              <option value="子育て世帯">子育て世帯</option>
+              <option value="シニア夫婦">シニア夫婦</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-field">
+          <label class="form-label">利用経験</label>
+          <div class="tag-group" id="experienceTags">
+            <button class="tag" data-value="未経験">未経験</button>
+            <button class="tag selected" data-value="初心者">初心者</button>
+            <button class="tag" data-value="中級者">中級者</button>
+            <button class="tag" data-value="ヘビーユーザー">ヘビーユーザー</button>
+          </div>
+        </div>
+
+        <div class="form-field">
+          <label class="form-label">関心カテゴリ（複数選択可）</label>
+          <div class="tag-group" id="categoryTags">
+            <button class="tag selected" data-value="食品">食品</button>
+            <button class="tag selected" data-value="日用品">日用品</button>
+            <button class="tag" data-value="旅行">旅行</button>
+            <button class="tag" data-value="体験">体験</button>
+            <button class="tag" data-value="家電">家電</button>
+          </div>
+        </div>
+
+        <div class="form-field">
+          <label class="form-label">インタビュー人数</label>
+          <div class="tag-group" id="countTags">
+            <button class="tag" data-value="3">3人</button>
+            <button class="tag selected" data-value="5">5人</button>
+            <button class="tag" data-value="8">8人</button>
+          </div>
+        </div>
+
+        <div class="form-field">
+          <label class="form-label" for="focusInput">フォーカスエリア（任意）</label>
+          <textarea class="form-input" id="focusInput" placeholder="特に深掘りしたい点、除外したい点など..."></textarea>
+        </div>
+
+        <div class="form-actions">
+          <button class="btn btn-primary" id="startInterviewBtn">インタビューを生成する →</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- STEP 2 -->
+  <section class="step-panel" id="panel2">
+    <div class="section-header">
+      <div class="section-title">インタビューデータ</div>
+      <button class="btn btn-secondary btn-sm" id="backToStep1Btn">← 設定に戻る</button>
+    </div>
+    <p id="interviewSubtitle" style="font-size:13px;color:var(--color-text-muted);margin-bottom:16px;"></p>
+
+    <div class="progress-wrap" id="interviewProgress" style="display:none;">
+      <div class="progress-label" id="progressLabel">AIがインタビューデータを生成中...</div>
+      <div class="progress-track"><div class="progress-bar" id="progressBar"></div></div>
+      <div class="progress-status" id="progressStatus"></div>
+    </div>
+
+    <div class="error-box" id="step2Error"></div>
+    <div class="interviews-grid" id="interviewsGrid"></div>
+    <div class="analyze-area" id="analyzeArea" style="display:none;">
+      <button class="btn btn-primary" id="analyzeBtn">インサイトを抽出する →</button>
+    </div>
+  </section>
+
+  <!-- STEP 3 -->
+  <section class="step-panel" id="panel3">
+    <div class="section-header">
+      <div class="section-title">UXインサイト</div>
+      <div style="display:flex;align-items:center;gap:12px;">
+        <span class="copy-success" id="copySuccess">コピーしました ✓</span>
+        <button class="btn btn-secondary btn-sm" id="copyReportBtn">レポートをコピー</button>
+        <button class="btn btn-secondary btn-sm" id="backToStep2Btn">← インタビューへ</button>
+      </div>
+    </div>
+
+    <div class="progress-wrap" id="insightProgress" style="display:none;">
+      <div class="progress-label">インタビューデータを分析中...</div>
+      <div class="progress-track"><div class="progress-bar" id="insightProgressBar"></div></div>
+      <div class="progress-status" id="insightProgressStatus"></div>
+    </div>
+
+    <div class="error-box" id="step3Error"></div>
+
+    <div id="insightResults" style="display:none;">
+      <div class="metrics-row" id="metricsRow"></div>
+      <div class="insights-grid" id="insightsGrid"></div>
+    </div>
+  </section>
+
+</main>
+
+<script>
+// ===== STATE =====
+const state = {
+  currentStep: 1,
+  completedSteps: new Set(),
+  formData: {},
+  interviews: [],
+  insights: null
+};
+
+const AVATAR_COLORS = ['#D85A30','#378ADD','#639922','#BA7517','#7B5EA7'];
+
+// ===== MOCK DATA =====
+
+const NAMES = [
+  '田中さつき','鈴木啓太','佐藤由美','山田浩二','中村あかり',
+  '伊藤健一','渡辺麻衣','小林誠','松本ひかる','加藤大輔'
+];
+
+const JOBS = {
+  '20代': ['Webデザイナー','ITエンジニア','営業職','広告代理店勤務','アパレル販売員','出版社勤務','公務員','フリーランス'],
+  '30代': ['マーケティング職','システムエンジニア','中学校教員','看護師','不動産営業','広報担当','経営コンサルタント','フリーランスライター'],
+  '40代': ['中間管理職','自営業（飲食店）','医療事務','保険営業','会計士','人事部長','工場管理職','学校管理職'],
+  '50代': ['部長職','会社役員','個人事業主','教員','薬剤師','建設業自営','行政書士','医師']
+};
+
+const AGES_MAP = {
+  '20代': ['22','24','25','26','27','28','29'],
+  '30代': ['31','32','33','34','35','36','37','38'],
+  '40代': ['41','42','43','45','46','47','48'],
+  '50代': ['51','52','53','54','55','56','58']
+};
+
+const FAMILY_MAP = {
+  '単身':     ['一人暮らし','単身赴任中','独立して一人暮らし','ペットと同居'],
+  '共働き夫婦':['共働き・子なし','パートナーと二人暮らし','DINKS・都内在住','夫婦共働き・郊外在住'],
+  '子育て世帯':['夫婦と子ども2人','3人家族','小学生の子を持つ親','乳幼児育て中'],
+  'シニア夫婦':['夫婦二人暮らし','子どもは独立済み','定年後・郊外在住','地方移住後の夫婦生活']
+};
+
+// Q&A プール（質問 + 回答バリエーション）
+const QA_POOL = [
+  {
+    q: 'ふるさと納税をどのように知り、始めましたか？',
+    answers: [
+      '会社の同僚に勧められて去年初めて使いました。最初は控除の仕組みがよくわからなくて、申し込む前にかなり調べましたね。「税金が返ってくる」という感覚は理解できたのですが、実際いくら得をするのかが最後までピンとこなかったです。',
+      'SNSで「実質2,000円で牛肉が届く」という投稿を見て気になり始めました。最初は半信半疑で少額から試してみたんですが、本当に返礼品が届いたときは素直に嬉しかったです。翌年からは積極的に使うようになりました。',
+      '確定申告のときに税理士さんから教えてもらいました。もっと早く始めておけばよかったと少し後悔しています。制度自体はシンプルなはずなのに、最初の一歩がなんとなく難しく感じられました。',
+      '友人に「楽天でポイントがたまるよ」と教えてもらったのが最初です。ポイントのことはよくわかっていて、そちらの使い方は把握していたので比較的スムーズに始められました。でも控除申請の手続きは今も少し不安があります。',
+      '子どもが生まれて家計を見直したときに発見しました。育児でお金がかかる時期だったので、少しでも節税になればと思って始めたんです。最初はサイト自体がどれを使えばいいかわからず、3つくらい比較しました。',
+      '会社の福利厚生情報として案内が来て知りました。専用のポータルサイトがあって手続きが少しやりやすかったです。それでも最初の年は控除上限額の計算が合っているか不安で、2、3回見直しました。',
+      '両親が昔からやっていて、帰省したときに返礼品が届いていたのを見て興味を持ちました。自分で始めたのは去年からで、最初は親に聞きながら進めたのでスムーズに感じました。',
+      '年末調整のあとに「今年はふるさと納税やらなかった…」と後悔して、翌年から始めました。年末になると急いで調べて申し込むパターンを毎年繰り返しています。'
+    ]
+  },
+  {
+    q: '申し込みや返礼品選びで困ったことはありますか？',
+    answers: [
+      '返礼品が多すぎて逆に選べないんですよね。どれが本当においしいのか、レビューだけじゃ判断しにくくて、結局よく知らない産地のものを選んで少し後悔したことがあります。もう少し「おすすめ理由」が丁寧に書いてあると助かります。',
+      'ワンストップ特例の書類を出すのが面倒で、結局確定申告と一緒にやりました。もっとデジタルで完結してほしいというのが本音です。特に書類を印刷して郵送するのがネックで、そこで毎回手が止まります。',
+      '控除上限額をどうやって計算すればいいのかわからず、結局使いすぎてしまったことがあります。シミュレーターを使っても「所得控除」の意味が難しくて、正確な数値を出せている自信がいつもありません。',
+      '申し込み後に届くまでの状況が追跡できなくて不安でした。「本当に申し込めているのか」「いつ届くのか」が確認できる画面がわかりにくくて、サポートに問い合わせたこともあります。',
+      '季節限定の返礼品を狙っていたら受付終了していたことが何度かあります。「人気商品は早めに」とは知っていても、年度中いつがチャンスなのかがわかりにくいと感じています。',
+      'ポイントが使えるサイトと使えないサイトがあって、ルールが複雑でした。クレジットカードのポイント還元も組み合わせようとすると頭が混乱してきて、毎年同じところで詰まっています。',
+      'サイトによってUIが全然違うので、複数のサービスを使うとその都度慣れる必要があって面倒です。お気に入り自治体をまとめて管理できる機能がどこも弱くて、履歴も見返しにくいです。',
+      '家族分の控除上限がどう変わるか、扶養状況が変わったときに再計算するのが大変でした。「去年はいくら申し込んだっけ」というのをいつも確認しながらやっているので、一元管理できると嬉しいです。'
+    ]
+  },
+  {
+    q: 'どんな体験だったら「また使いたい」と思いますか？',
+    answers: [
+      '牛肉セットを頼んだら想像以上のボリュームで届いて、家族みんなで喜びました。こういう「期待以上」の体験があると自然にリピートしたくなります。逆に写真と実物が違ったときは一気に冷めてしまいます。',
+      'お気に入り自治体の商品を手軽に再注文できる導線があると嬉しいです。去年頼んだやつをまた頼もうと思っても、どのサイトで申し込んだか忘れてしまって探すのに時間がかかります。',
+      '寄付した後に自治体から「使い道報告」が来たことがあって、そのときは寄付した意味を感じられました。返礼品だけじゃなくて、地域への貢献が実感できる体験があるとまた使いたいと思います。',
+      '好みに合わせたレコメンドが精度よく機能していれば、もっと積極的に探せると思います。「あなたが好きそうな産地」みたいな提案があると、選択に費やす時間が減って楽になります。',
+      '手続きが全部アプリで完結する体験があれば、もっと気軽に使えると思います。書類を郵送しなくていい、返礼品の追跡も全部スマホで、というのが理想です。',
+      '地域の特産品を届けてくれるだけでなく、生産者の顔や背景が見える情報があると感情移入できます。実際に旅行して現地を訪れたくなったことがあって、そのときは本当に使ってよかったと感じました。',
+      '年間の寄付予算と残り枠がダッシュボードで一目見てわかるようになれば、計画的に使えるようになると思います。今は毎年「年末に焦る」を繰り返しているので。',
+      '配送が早くて確実だと安心します。年末に申し込んで年内に届くかギリギリになることがあって、そのときはハラハラしました。配送予定の通知がしっかりあるだけで印象が全然違います。'
+    ]
+  },
+  {
+    q: '実際に使ってみてよかった点・悪かった点は？',
+    answers: [
+      'よかった点は、普段なかなか買えない高級食材が手に届いたことです。北海道のカニや九州の黒毛和牛など、スーパーでは見ないような品質のものが届くのはやっぱり嬉しいです。悪かった点は、届くタイミングを指定できなかったことです。',
+      '自分がいつどこに寄付したか、履歴が見にくくて困りました。複数のサービスに分散していて、確定申告のときに証明書を集めるのが毎年大変です。アプリで管理できたらいいのにと思います。',
+      '年末にいつも焦って駆け込みで申し込むので、もっと早めに「今年の控除枠はあと〇〇円です」と通知してくれると助かります。いつも12月末ギリギリに滑り込む感じになっていて、計画的に使えていません。',
+      '子どもの名産地の産品を選んでいるうちに、地域への興味が出てきました。旅行したくなるきっかけになったのは想定外の副産物でした。ただ、レビューの信頼性には疑問があって、サクラっぽい高評価も混じっているように感じています。',
+      'よかったのはとにかく費用対効果が高いこと。2,000円の負担で何万円分かの返礼品がもらえるという体験は、最初は半信半疑でしたが実際にやってみると本当にお得感があります。悪い点はサービスの乱立で比較が大変なことです。',
+      '地元の食材を支援しているという感覚があるのがよかったです。地方出身者としては、故郷の自治体に寄付できるのは感情的に嬉しいものがあります。ただ手続きの煩雑さは相変わらず改善してほしいです。',
+      '配送業者によって扱いが違うのか、冷凍品の状態が悪くて届いたことがありました。そのときの対応が自治体に直接連絡するしかなくて、サポート体制の弱さを感じました。',
+      '年に一度しかやらないと操作を忘れてしまうので、毎年一から覚え直している感覚があります。「前回はこうやった」という引き継ぎ情報をサービス側が保存してくれると、もっとスムーズだと思います。'
+    ]
+  },
+  {
+    q: '理想のふるさと納税サービスはどんなものですか？',
+    answers: [
+      '控除の仕組みを全部計算してくれて、「あと〇〇円寄付できます」とリアルタイムに見せてくれるサービスがあれば理想です。今は自分でシミュレーターを使って計算していますが、毎回不安が残ります。',
+      '食の好みや家族構成を登録しておくと、ぴったりの返礼品を提案してくれるキュレーション機能があればいいと思います。Netflixのようなレコメンドを返礼品選びに活かせれば、選ぶ手間が大幅に減るはずです。',
+      '手続きをすべてデジタルで完結させてほしいです。書類の郵送がなくなるだけで、もっと気軽に使えるようになると思います。マイナンバーカードを使ったオンライン完結の仕組みが標準化されてほしいです。',
+      '過去の寄付履歴、今年の控除上限、残り枠などを一元管理できるダッシュボードがあれば最高です。複数のサービスに分散した情報をまとめて見られるようなアグリゲーター的なアプリがあれば使いたいです。',
+      '返礼品のリアルなレビューが充実していてほしいです。インフルエンサーじゃない一般ユーザーのリアルな評価や写真が見られると判断しやすいです。実際に届いた状態の写真付きレビューがあると特に助かります。',
+      '寄付した自治体から「あなたの寄付はこう使われました」という報告を定期的に受け取れるようにしてほしいです。地域とのつながりが感じられる仕掛けがあると、もっと積極的に関わりたくなります。',
+      '返礼品の到着予定日を選択できて、記念日や誕生日に合わせて届けられる機能があれば、ギフト代わりにも使えると思います。ただ消費するだけでなく、誰かへの贈り物としても使えれば活用の幅が広がります。',
+      '自治体ごとにページデザインが統一されていてほしいです。今は自治体によって情報の見せ方がバラバラで、大切な情報を見落としてしまうことがあります。',
+      '年の途中でも「今月の寄付におすすめ」のような旬のコンテンツを届けてほしいです。年末だけでなく、季節ごとに旬の産品を楽しめるような提案があると計画的に使えると思います。'
+    ]
+  },
+  {
+    q: '返礼品を選ぶ際にどんな基準で決めていますか？',
+    answers: [
+      '食品が多いので、まず家族が好きなものを優先しています。牛肉・魚介・米あたりが定番で、それ以外は「普段は買えない特別感」のあるものを選びます。価格帯と返礼品の量のバランスも重視していて、コスパが悪いと感じたら候補から外します。',
+      '地元の友人や親戚のいる自治体を優先的に選ぶようにしています。ちょっとした応援の気持ちもあるので、産地が実感できる返礼品だと選びやすいです。レビューはあまり信用していなくて、写真の見た目で判断することが多いです。',
+      '子どもが食べられるかどうかが第一基準です。アレルギーの関係で選択肢が狭まることもありますが、産地が明記されていて安心感があるものを優先しています。子ども向けの配慮がある返礼品は少ないのが悩みです。',
+      '「ふるさとチョイス」と「楽天ふるさと納税」を見比べて、ポイント還元が高い方で申し込むことが多いです。返礼品の内容よりもポイント数で決めているので、ある意味本末転倒かもしれないと思いつつも、習慣になっています。',
+      '旅行先の自治体をあとから調べて寄付することがあります。「あの場所の名産品」という思い入れがあるので、食べたときに旅行の記憶が蘇ってくるのが好きです。そういう体験をくれる返礼品は特に印象に残ります。'
+    ]
+  }
+];
+
+// ===== INSIGHT POOLS =====
+
+const PAIN_POINTS = [
+  '返礼品が多すぎて比較・選択に時間がかかる',
+  'ワンストップ特例の申請手続きが煩雑でわかりにくい',
+  '控除額のシミュレーションが難しく、いくら寄付すべきか判断できない',
+  '申し込み後に届くまでの状況が追跡できず不安になる',
+  'レビューの信頼性が低く、実際の品質がわからない',
+  '年末に集中してしまい、計画的に使えていない',
+  'サイトによってUIが異なり、慣れるまで時間がかかる',
+  'ポイント還元やクレジットカードとの併用ルールが複雑',
+  '家族構成が変わったときに控除額の再計算が大変',
+  'お気に入り自治体へのリピート寄付の導線がわかりにくい',
+  '証明書が複数の自治体から届き、管理・整理が煩雑',
+  '年度をまたぐと過去の申し込み履歴が確認しにくい',
+  '配送タイミングが選べず、食品が大量に届いて消費に困る',
+  'サポート体制が弱く、問題が起きたときの対応先がわからない',
+  '返礼品の写真と実物の品質・量にギャップがあることがある'
+];
+
+const NEEDS = [
+  '自分の年収に合った控除上限額を簡単に把握したい',
+  '信頼できる返礼品レビューや実食レポートが見たい',
+  '過去の寄付履歴と残り控除枠をひとまとめで管理したい',
+  'お気に入り自治体への定期寄付を自動化したい',
+  'カテゴリやシーンで絞り込める直感的な検索がほしい',
+  'ワンストップ特例をオンラインだけで完結させたい',
+  '季節や行事に合わせた返礼品提案を受け取りたい',
+  '寄付先の自治体の使い道や取り組みを知りたい',
+  '家族の好みや食制限を登録してパーソナライズされた提案がほしい',
+  '返礼品の配送日を自分で指定できるようにしたい',
+  '年間の寄付計画をカレンダー形式で立てられるようにしたい',
+  '複数のふるさと納税サービスをまたいだ一元管理をしたい',
+  '実際に届いた状態の写真や量がわかるレビューを見たい',
+  'リピートしたい返礼品を簡単に再申し込みできる仕組みがほしい',
+  '地方移住や観光と連携したコンテンツで地域への興味を深めたい'
+];
+
+const QUOTES = [
+  '控除の仕組みは理解したつもりだけど、本当にお得なのか毎年自信がない',
+  '返礼品が届いたときの嬉しさは本物。でもそこに辿り着くまでが長い',
+  '書類の郵送がなくなったら、もっと気軽に使えるのに',
+  'レビューを見ても「これって本当においしいの？」って毎回悩んでしまう',
+  '年末にバタバタするのをなんとかしたくて、今年こそ計画的にやろうと思っているんですが…',
+  'ポイントが使えるかどうかで申し込むサービスを変えているので、もはや節税より節約に近い感覚です',
+  '寄付した先の自治体から手書きのお礼状が届いたとき、初めて「ふるさと納税って良いな」と思えた',
+  '毎年控除上限に到達しているか不安で、年末に少し多めに申し込んでしまう',
+  '牛肉が届いたとき、家族全員が「え！これ全部？」って声を上げました。あの瞬間は最高でした',
+  '正直、手続きが面倒じゃなければもっと頻繁に使いたいです',
+  '地方の生産者を応援している感覚があるのが、税金を払うより少し前向きな気持ちになれる理由です',
+  '確定申告のシーズンに証明書を探し回るのが毎年の恒例行事になってしまっています',
+  '申し込んだことを忘れていたら突然大量の食品が届いて、冷凍庫がパンクしました',
+  '複数のサービスを使い比べてみたけど、結局どれも「もうちょっとここが良ければ」という感じで決め手がない',
+  '子どもと一緒に産地の地図を見ながら「次はここにしよう」と話すのが楽しくなってきました',
+  '返礼品の選択肢が多いのは嬉しいけど、選ぶのに1時間かかることもあって、それが地味に億劫です',
+  'ふるさと納税を通じて、自分がまったく知らなかった自治体に興味を持てたのは意外な収穫でした',
+  '申し込みが完了した後の達成感はあるんですが、証明書の管理まで含めると正直しんどい',
+  '使えば使うほど「この手間、本当に2,000円分の節約になっているの?」と思ってしまうことがある',
+  '毎年同じ牛肉を頼んでいるけど、それに飽きずに嬉しいってことは、相当クオリティが高いんだと思う'
+];
+
+const HMW = [
+  'How Might We... 返礼品選びを、まるでギフト選びのように楽しい体験にできるか？',
+  'How Might We... 控除計算を、申し込み中にリアルタイムで確認できるようにできるか？',
+  'How Might We... 寄付後の体験を、地域とのつながりを感じられるストーリーにできるか？',
+  'How Might We... ワンストップ特例の手続きを、スマホだけで5分以内に完結させられるか？',
+  'How Might We... 年間の寄付計画を、無理なく計画的に立てられるよう支援できるか？',
+  'How Might We... 信頼できるレビューだけを届けて、返礼品への期待と不安をなくせるか？',
+  'How Might We... 複数サービスに分散した寄付履歴を、ひとつの画面で一元管理できるか？',
+  'How Might We... 家族の好みや食の制限を活かして、ぴったりな返礼品を自動提案できるか？',
+  'How Might We... 生産者の顔が見える情報設計で、地方への応援意欲を高められるか？',
+  'How Might We... 返礼品の到着タイミングを、ライフイベントや季節に合わせて最適化できるか？',
+  'How Might We... ふるさと納税を、単なる節税から地域体験の入り口に変えられるか？',
+  'How Might We... 年末の駆け込み申し込みを防ぐ、自然な行動変容の仕組みを作れるか？',
+  'How Might We... お気に入り自治体への継続的な関与を、シームレスに実現できるか？',
+  'How Might We... 初めてのユーザーが迷わず最初の申し込みを完了できる体験を作れるか？',
+  'How Might We... 確定申告の証明書管理を自動化して、年度末の手間をゼロにできるか？'
+];
+
+// ===== UTILS =====
+function pickRandom(arr, count) {
+  const copy = [...arr];
+  for (let i = copy.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [copy[i], copy[j]] = [copy[j], copy[i]];
+  }
+  return copy.slice(0, count);
+}
+
+function escapeHTML(str) {
+  return String(str || '')
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+
+function rand(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
+
+// ===== GENERATE MOCK DATA =====
+function generateInterviews(fd) {
+  const names = pickRandom(NAMES, fd.count);
+  const jobs  = JOBS[fd.age] || JOBS['30代'];
+  const ages  = AGES_MAP[fd.age] || AGES_MAP['30代'];
+  const families = FAMILY_MAP[fd.lifestyle] || FAMILY_MAP['共働き夫婦'];
+
+  return names.map(name => {
+    const pickedQs = pickRandom(QA_POOL, 3);
+    const qa = pickedQs.map(item => ({
+      q: item.q,
+      a: rand(item.answers)
+    }));
+
+    const profile = `${rand(jobs)} / ${rand(ages)}歳 / ${rand(families)}`;
+
+    return { name, profile, qa };
+  });
+}
+
+function generateInsights(interviewCount) {
+  return {
+    pain_points: pickRandom(PAIN_POINTS, 4),
+    needs:       pickRandom(NEEDS, 4),
+    quotes:      pickRandom(QUOTES, 3),
+    hmw:         pickRandom(HMW, 4)
+  };
+}
+
+// ===== TAG INTERACTIONS =====
+function initSingleSelect(id) {
+  document.getElementById(id).addEventListener('click', e => {
+    const tag = e.target.closest('.tag');
+    if (!tag) return;
+    document.getElementById(id).querySelectorAll('.tag').forEach(t => t.classList.remove('selected'));
+    tag.classList.add('selected');
+  });
+}
+function initMultiSelect(id) {
+  document.getElementById(id).addEventListener('click', e => {
+    const tag = e.target.closest('.tag');
+    if (!tag) return;
+    tag.classList.toggle('selected');
+  });
+}
+function getSelected(id) {
+  return [...document.getElementById(id).querySelectorAll('.tag.selected')].map(t => t.dataset.value);
+}
+
+initSingleSelect('experienceTags');
+initMultiSelect('categoryTags');
+initSingleSelect('countTags');
+
+// ===== STEP NAVIGATION =====
+function goToStep(step) {
+  [1,2,3].forEach(s => {
+    document.getElementById(`panel${s}`).classList.toggle('active', s === step);
+    const item   = document.getElementById(`stepItem${s}`);
+    const circle = document.getElementById(`stepCircle${s}`);
+    item.classList.remove('active','done');
+    if (s === step) item.classList.add('active');
+    else if (state.completedSteps.has(s)) item.classList.add('done');
+    circle.textContent = (state.completedSteps.has(s) && s !== step) ? '✓' : s;
+  });
+  state.currentStep = step;
+}
+
+// ===== COLLECT FORM =====
+function collectForm() {
+  return {
+    theme:      document.getElementById('themeInput').value.trim() || 'ふるさと納税の利用体験について',
+    age:        document.getElementById('ageSelect').value,
+    lifestyle:  document.getElementById('lifestyleSelect').value,
+    experience: getSelected('experienceTags')[0] || '初心者',
+    categories: getSelected('categoryTags'),
+    count:      parseInt(getSelected('countTags')[0] || '5', 10),
+    focus:      document.getElementById('focusInput').value.trim()
+  };
+}
+
+// ===== PROGRESS ANIMATION =====
+function animateProgress(barId, durationMs, steps, statusId) {
+  return new Promise(resolve => {
+    const bar = document.getElementById(barId);
+    const statusEl = statusId ? document.getElementById(statusId) : null;
+    let pct = 0;
+    const messages = steps || [];
+    let msgIndex = 0;
+    const interval = 80;
+    const increment = 100 / (durationMs / interval);
+
+    const timer = setInterval(() => {
+      pct = Math.min(pct + increment + (Math.random() * increment * 0.5), 98);
+      bar.style.width = pct + '%';
+
+      if (statusEl && messages.length) {
+        const target = Math.floor((pct / 100) * messages.length);
+        if (target > msgIndex && target < messages.length) {
+          msgIndex = target;
+          statusEl.textContent = messages[msgIndex];
+        }
+      }
+
+      if (pct >= 98) {
+        clearInterval(timer);
+        bar.style.width = '100%';
+        setTimeout(resolve, 300);
+      }
+    }, interval);
+  });
+}
+
+// ===== RENDER INTERVIEW CARDS =====
+function renderInterviews(interviews) {
+  const grid = document.getElementById('interviewsGrid');
+  grid.innerHTML = '';
+  interviews.forEach((iv, i) => {
+    const card = document.createElement('div');
+    card.className = 'interview-card';
+    const color = AVATAR_COLORS[i % AVATAR_COLORS.length];
+    const initial = iv.name.charAt(0);
+    const qaHTML = iv.qa.map(q => `
+      <div class="qa-item">
+        <div class="qa-q">${escapeHTML(q.q)}</div>
+        <div class="qa-a">${escapeHTML(q.a)}</div>
+      </div>`).join('');
+
+    card.innerHTML = `
+      <div class="interview-header">
+        <div class="avatar" style="background:${color}">${escapeHTML(initial)}</div>
+        <div class="interview-meta">
+          <div class="interview-name">${escapeHTML(iv.name)}</div>
+          <div class="interview-profile">${escapeHTML(iv.profile)}</div>
+        </div>
+      </div>
+      <div class="qa-list">${qaHTML}</div>`;
+
+    grid.appendChild(card);
+    setTimeout(() => card.classList.add('visible'), i * 300);
+  });
+}
+
+// ===== RENDER INSIGHTS =====
+function renderInsights(ins) {
+  const metricsRow = document.getElementById('metricsRow');
+  metricsRow.innerHTML = `
+    <div class="metric-card">
+      <div class="metric-value">${state.interviews.length}</div>
+      <div class="metric-label">インタビュー数</div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-value">${ins.pain_points.length}</div>
+      <div class="metric-label">ペインポイント</div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-value">${ins.hmw.length}</div>
+      <div class="metric-label">HMW 機会</div>
+    </div>`;
+
+  const cards = [
+    { type:'pain',  label:'Pain Points',   title:'ペインポイント',    items: ins.pain_points, isQuote: false },
+    { type:'need',  label:'Needs',         title:'ユーザーニーズ',    items: ins.needs,       isQuote: false },
+    { type:'quote', label:'Quotes',        title:'印象的な発言',      items: ins.quotes,      isQuote: true  },
+    { type:'hmw',   label:'How Might We',  title:'デザイン機会',      items: ins.hmw,         isQuote: false }
+  ];
+
+  const grid = document.getElementById('insightsGrid');
+  grid.innerHTML = '';
+  cards.forEach((c, i) => {
+    const card = document.createElement('div');
+    card.className = `insight-card ${c.type}-card`;
+    const itemsHTML = c.items.map(item =>
+      `<li class="insight-item ${c.isQuote ? 'quote-item' : ''}">${escapeHTML(item)}</li>`
+    ).join('');
+    card.innerHTML = `
+      <span class="insight-tag ${c.type}">${c.label}</span>
+      <div class="insight-title">${c.title}</div>
+      <ul class="insight-list">${itemsHTML}</ul>`;
+    grid.appendChild(card);
+    setTimeout(() => card.classList.add('visible'), i * 150);
+  });
+}
+
+// ===== STEP 1 → 2 =====
+document.getElementById('startInterviewBtn').addEventListener('click', async () => {
+  const fd = collectForm();
+  state.formData = fd;
+  state.completedSteps.add(1);
+  goToStep(2);
+
+  document.getElementById('interviewSubtitle').textContent =
+    `${fd.theme} — ${fd.age} / ${fd.lifestyle} / ${fd.experience}`;
+  document.getElementById('interviewsGrid').innerHTML = '';
+  document.getElementById('analyzeArea').style.display = 'none';
+  document.getElementById('interviewProgress').style.display = 'block';
+  document.getElementById('progressBar').style.width = '0%';
+
+  const steps = [
+    'ターゲットプロフィールを構築中...',
+    'インタビュー設問を設計中...',
+    `${fd.count}名分の回答を生成中...`,
+    'データを整形しています...',
+    'インタビューデータが完成しました！'
+  ];
+
+  await animateProgress('progressBar', 2500, steps, 'progressStatus');
+
+  document.getElementById('interviewProgress').style.display = 'none';
+  state.interviews = generateInterviews(fd);
+  renderInterviews(state.interviews);
+  document.getElementById('analyzeArea').style.display = 'flex';
+});
+
+// ===== STEP 2 → 3 =====
+document.getElementById('analyzeBtn').addEventListener('click', async () => {
+  state.completedSteps.add(2);
+  goToStep(3);
+
+  document.getElementById('insightProgress').style.display = 'block';
+  document.getElementById('insightResults').style.display = 'none';
+  document.getElementById('insightProgressBar').style.width = '0%';
+
+  const steps = [
+    'インタビュー全文をパース中...',
+    'ペインポイントを抽出中...',
+    'ユーザーニーズを分類中...',
+    'キーワードを整理しています...',
+    'インサイトレポートを生成中...'
+  ];
+
+  await animateProgress('insightProgressBar', 1800, steps, 'insightProgressStatus');
+
+  document.getElementById('insightProgress').style.display = 'none';
+  state.insights = generateInsights(state.interviews.length);
+  renderInsights(state.insights);
+  document.getElementById('insightResults').style.display = 'block';
+  state.completedSteps.add(3);
+  goToStep(3);
+});
+
+// ===== BACK BUTTONS =====
+document.getElementById('backToStep1Btn').addEventListener('click', () => goToStep(1));
+document.getElementById('backToStep2Btn').addEventListener('click', () => goToStep(2));
+
+// ===== COPY REPORT =====
+document.getElementById('copyReportBtn').addEventListener('click', () => {
+  if (!state.insights) return;
+  const fd = state.formData;
+  const ins = state.insights;
+  let md = `# UX Research Report\n\n`;
+  md += `**テーマ:** ${fd.theme}\n`;
+  md += `**対象:** ${fd.age} / ${fd.lifestyle} / ${fd.experience}\n`;
+  md += `**インタビュー人数:** ${state.interviews.length}人\n\n---\n\n`;
+  md += `## ペインポイント\n`;
+  ins.pain_points.forEach(p => { md += `- ${p}\n`; });
+  md += `\n## ユーザーニーズ\n`;
+  ins.needs.forEach(n => { md += `- ${n}\n`; });
+  md += `\n## 印象的な発言\n`;
+  ins.quotes.forEach(q => { md += `> ${q}\n\n`; });
+  md += `## How Might We\n`;
+  ins.hmw.forEach(h => { md += `- ${h}\n`; });
+  md += `\n---\n\n## インタビューデータ\n\n`;
+  state.interviews.forEach((iv, i) => {
+    md += `### 参加者${i + 1}: ${iv.name}\n${iv.profile}\n\n`;
+    iv.qa.forEach(q => { md += `**Q:** ${q.q}\n**A:** ${q.a}\n\n`; });
+  });
+
+  navigator.clipboard.writeText(md).then(() => {
+    const el = document.getElementById('copySuccess');
+    el.classList.add('visible');
+    setTimeout(() => el.classList.remove('visible'), 2000);
+  }).catch(() => {
+    const el = document.getElementById('step3Error');
+    el.textContent = 'クリップボードへのコピーに失敗しました。ブラウザの設定を確認してください。';
+    el.classList.add('visible');
+    setTimeout(() => el.classList.remove('visible'), 3000);
+  });
+});
+</script>
+</body>
+</html>
